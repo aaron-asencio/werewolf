@@ -13,8 +13,7 @@ int servoPin = 9;
 
 // PIR senosr
 int ledPin = 10;                // choose the pin for the LED
-int brightness = 0;    // how bright the LED is
-int fadeAmount = 5;    // how many points to fade the LED by
+
 
 int inputPin = 2;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
@@ -36,91 +35,78 @@ void sweepLimit() {
 	sweep(0, 180, 1, 30, 1000);
 }
 
+int fadeRange = 51;
+
 // 30 ms for delay
 void sweep(int start, int stop, int step, int delayTime, int pauseInterval) {
+	int fadeValue = 0;
 
-	int totalMovements = abs(stop - start) / step;
-	fadeAmount = 255 / totalMovements;
-	Serial.print("fadeAmount: ");
-	Serial.println(fadeAmount);
+	Serial.print("fadeValue: ");
+	Serial.println(fadeValue);
 
 	Serial.println("start");
 	for (int i = start; i <= stop; i += step) {
 
 		// set the brightness
-		analogWrite(ledPin, brightness);
-		Serial.print("brightness: ");
-		Serial.println(brightness);
+		analogWrite(ledPin, fadeValue);
+		Serial.print("fadeValue: ");
+		Serial.println(fadeValue);
 
 		// change the brightness for next time through the loop:
-		brightness = brightness + fadeAmount;
-
-		// reverse the direction of the fading at the ends of the fade:
-		if (brightness <= 0 || brightness >= 255) {
-			fadeAmount = -fadeAmount;
-		}
+		fadeValue++;
 		myservo.write(i);
+		Serial.print("servo pos: ");
 		Serial.println(i);
 		delay(delayTime);
 	}
-	delay(pauseInterval);
+
+	int fadeEnd = fadeRange - fadeValue;
+	brighten(fadeValue, fadeEnd,  delayTime);
+	fadeValue = fadeEnd;
+	//
 	for (int i = stop; i >= start; i -= step) {
-
-		// set the brightness of pin 9:
-		analogWrite(ledPin, brightness);
-
-		brightness = brightness + fadeAmount;
-
-		// reverse the direction of the fading at the ends of the fade:
-		if (brightness <= 0 || brightness >= 255) {
-			fadeAmount = -fadeAmount;
-		}
-
+		// set the brightness
+		analogWrite(ledPin, fadeValue);
+		fadeValue--;
 		myservo.write(i);
 		Serial.println(i);
 		delay(delayTime);
 	}
+	dim(fadeValue, 0,  delayTime);
 	Serial.println("stop");
 }
-// 30 ms for delay
-void sweepOpen(int start, int stop, int step, int delayTime) {
-//TODO
+
+
+void brighten(int fadeStart, int fadeEnd, int delayTime)
+{
+	 for (int fadeValue = fadeStart; fadeValue <= fadeEnd; fadeValue++) {
+	    // sets the value (range from 0 to 51):
+	    analogWrite(ledPin, fadeValue);
+	    Serial.print("brighten fadeValue: ");
+	    		Serial.println(fadeValue);
+
+	    // wait to see the dimming effect
+	    delay(delayTime);
+	  }
+
+}
+void dim(int fadeStart, int fadeEnd, int delayTime)
+{
+
+	  // fade out from max to min in increments of 5 points:
+	  for (int fadeValue = fadeEnd ; fadeValue >= fadeStart; fadeValue--) {
+	    // sets the value (range from 0 to 255):
+	    analogWrite(ledPin, fadeValue);
+	    Serial.print("dim fadeValue: ");
+	    	    		Serial.println(fadeValue);
+	    // wait for 30 milliseconds to see the dimming effect
+	    delay(delayTime);
+	  }
 }
 
-void sweepClose(int start, int stop, int step, int delayTime,
-		int pauseInterval) {
-// TODO
-}
 
-void fade(int delayTime) {
-
-	boolean running = true;
-	int cyleNumber = 0;
-	do {
-		// set the brightness of pin 9:
-		analogWrite(ledPin, brightness);
-
-		// change the brightness for next time through the loop:
-		brightness = brightness + fadeAmount;
-
-		// reverse the direction of the fading at the ends of the fade:
-		if (brightness <= 0 || brightness >= 255) {
-			++cyleNumber;
-			fadeAmount = -fadeAmount;
-		}
-		// wait for  milliseconds to see the dimming effect
-		delay(delayTime);
-		if (cyleNumber == 2) {
-			running = false;
-		}
-	} while (running);
-}
 
 void loop() {
-	Serial.println("looping");
-}
-
-void loop1() {
 	Serial.println("looping");
 
 	val = digitalRead(inputPin);  // read input value
