@@ -1,2 +1,8 @@
 /makefile
 *.mk
+/Werewolf.eep
+/Werewolf.elf
+/Werewolf.hex
+/arduino.ar
+/sloeber.ino.cpp.d
+/sloeber.ino.cpp.o
