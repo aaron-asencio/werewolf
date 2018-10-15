@@ -27,7 +27,7 @@ void setup() {
 
 void chomp() {
 	Serial.println("chomp!");
-	sweep(0, 18, 1, 20, 250);
+	sweep(0, 18, 1, 50, 250);
 }
 
 void sweepLimit() {
@@ -38,7 +38,7 @@ int fadeRange = 51;
 
 // 30 ms for delay
 void sweep(int start, int stop, int step, int delayTime, int pauseInterval) {
-	int fadeValue = 0;
+	int fadeValue = 35;
 
 	Serial.print("fadeValue: ");
 	Serial.println(fadeValue);
@@ -47,18 +47,21 @@ void sweep(int start, int stop, int step, int delayTime, int pauseInterval) {
 	for (int i = start; i <= stop; i += step) {
 
 		// set the brightness
-		analogWrite(ledPin, fadeValue);
+		analogWrite(ledPin, fadeValue * 5);
 		Serial.print("fadeValue: ");
-		Serial.println(fadeValue);
+		Serial.println(fadeValue * 5);
 
 		// change the brightness for next time through the loop:
 		fadeValue++;
 		myservo.write(i);
-		Serial.println(i);
+		//Serial.println(i);
 		delay(delayTime);
+
 	}
 
-	brighten(fadeValue, fadeRange, delayTime);
+	//brighten(fadeValue * 5, fadeRange, delayTime);
+	analogWrite(ledPin, 255);
+	delay(1000);
 
 	fadeValue = 51;
 	for (int i = stop; i >= start; i -= step) {
@@ -68,7 +71,7 @@ void sweep(int start, int stop, int step, int delayTime, int pauseInterval) {
 		Serial.println(fadeValue);
 		fadeValue--;
 		myservo.write(i);
-		Serial.println(i);
+		//Serial.println(i);
 		delay(delayTime);
 	}
 	dim(fadeValue, 0, delayTime);
@@ -79,9 +82,9 @@ void sweep(int start, int stop, int step, int delayTime, int pauseInterval) {
 void brighten(int fadeStart, int fadeEnd, int delayTime) {
 	for (int fadeValue = fadeStart; fadeValue <= fadeEnd; fadeValue++) {
 		// sets the value (range from 0 to 51):
-		analogWrite(ledPin, fadeValue);
+		analogWrite(ledPin, fadeValue *5);
 		Serial.print("brighten fadeValue: ");
-		Serial.println(fadeValue);
+		Serial.println(fadeValue * 5);
 
 		// wait to see the dimming effect
 		delay(delayTime);
@@ -91,8 +94,8 @@ void brighten(int fadeStart, int fadeEnd, int delayTime) {
 void dim(int fadeStart, int fadeEnd, int delayTime) {
 
 	for (int fadeValue = fadeStart; fadeValue >= fadeEnd; fadeValue--) {
-		// sets the value (range from 0 to 255):
-		analogWrite(ledPin, fadeValue);
+
+		analogWrite(ledPin, fadeValue * 5);
 		Serial.print("dim fadeValue: ");
 		Serial.println(fadeValue);
 
@@ -100,32 +103,33 @@ void dim(int fadeStart, int fadeEnd, int delayTime) {
 	}
 }
 
-void loop() {
-	Serial.println("looping");
-
-	val = digitalRead(inputPin);  // read input value
-
+void handleMotion(int val)
+{
 	if (val == HIGH) {            // check if the input is HIGH
 
-		if (pirState == LOW) {
-
-			// we have just turned on
-			Serial.println("Motion detected!");
-
-			chomp();
-			// We only want to print on the output change, not state
-			pirState = HIGH;
-
+			if (pirState == LOW) {
+				// we have just turned on
+				Serial.println("Motion detected!");
+				chomp();
+				// We only want to print on the output change, not state
+				pirState = HIGH;
+			}
+		} else {
+			//
+			if (pirState == HIGH) {
+				// we have just turned of
+				Serial.println("Motion ended!");
+				// We only want to print on the output change, not state
+				pirState = LOW;
+			}
 		}
-	} else {
-		//
-		if (pirState == HIGH) {
-			// we have just turned of
-			Serial.println("Motion ended!");
-			// We only want to print on the output change, not state
-			pirState = LOW;
-		}
-	}
+}
+void loop() {
+	Serial.println("looping");
+	//set to zero to prevent any jerking doing looping
+	myservo.write(0);
+	val = digitalRead(inputPin);  // read input value
+	handleMotion(val);
 	delay(500);
 }
 
