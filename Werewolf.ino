@@ -116,11 +116,8 @@ void fade(int delayTime) {
 	} while (running);
 }
 
-void loop() {
-	Serial.println("looping");
-}
 
-void loop1() {
+void loop() {
 	Serial.println("looping");
 
 	val = digitalRead(inputPin);  // read input value
